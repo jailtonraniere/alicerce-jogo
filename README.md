@@ -64,7 +64,19 @@ Use sempre a **anon key** (nunca a service role) no front. A segurança fica na 
 
 Os leads ficam na tabela `lead`, que o anônimo não lê. Consulte pelo painel do Supabase ou exporte via service role no backend do comercial. Só são gravados com consentimento LGPD explícito.
 
-## Deploy na Vercel
+## Publicar no GitHub Pages (configurado)
+
+O workflow `.github/workflows/pages.yml` gera o build e publica a cada envio ao ramo `main`. Endereço: `https://jailtonraniere.github.io/alicerce-jogo/` (versão 3D: `https://jailtonraniere.github.io/alicerce-jogo/?3d`).
+
+Uma vez só, no GitHub:
+
+1. **Settings > Pages > Build and deployment > Source: GitHub Actions.**
+2. Para ranking e leads no Supabase (opcional): **Settings > Secrets and variables > Actions**. Em *Variables*, crie `VITE_SUPABASE_URL` e `VITE_EVENTO`; em *Secrets*, crie `VITE_SUPABASE_ANON_KEY` (sempre a anon key). Sem elas, o ranking fica salvo só no aparelho.
+3. Em **Actions > Publicar no GitHub Pages > Run workflow**, rode a primeira publicação (ou envie qualquer commit ao `main`).
+
+Depois de mudar as variáveis do Supabase, rode o workflow de novo: elas entram no momento do build.
+
+## Deploy na Vercel (alternativa)
 
 1. Suba o repositório e importe na Vercel (framework Vite é detectado; `vercel.json` já define build e saída).
 2. Em Settings > Environment Variables, adicione `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` e `VITE_EVENTO`.
