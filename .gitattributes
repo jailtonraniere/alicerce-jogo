@@ -1,0 +1,6 @@
+# Texto com fim de linha normalizado; modelos 3D e imagens sempre como binario.
+* text=auto
+*.glb binary
+*.png binary
+*.jpg binary
+*.zip binary

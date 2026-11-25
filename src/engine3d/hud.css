@@ -1,0 +1,296 @@
+/* Placar do motor 3D (carregado so quando o 3D esta ativo). */
+#game-root {
+  touch-action: none;
+}
+
+.hud3d {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  font-family: "Saira", sans-serif;
+  color: var(--ink);
+  user-select: none;
+}
+
+.hud3d-panel {
+  position: absolute;
+  top: max(14px, env(safe-area-inset-top));
+  left: 14px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(5, 18, 31, 0.55);
+  border: 1px solid rgba(91, 194, 240, 0.25);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.hud3d-panel.is-left {
+  left: 8px;
+}
+.hud3d-panel.is-right {
+  left: calc(50% + 8px);
+}
+.hud3d.is-duo .hud3d-panel {
+  padding: 6px 8px;
+}
+
+.hud3d-tag {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+
+.hud3d-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  line-height: 1.25;
+}
+.hud3d-row span {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+}
+.hud3d-row b {
+  font-weight: 800;
+  font-size: 17px;
+  font-variant-numeric: tabular-nums;
+}
+.hud3d-muni {
+  color: var(--accent);
+}
+.hud3d.is-duo .hud3d-row b {
+  font-size: 14px;
+}
+.hud3d.is-duo .hud3d-row span {
+  font-size: 9px;
+}
+.hud3d-pw {
+  font-style: normal;
+  font-size: 14px;
+  letter-spacing: 2px;
+}
+
+/* progresso do mapa do estado */
+.hud3d-map {
+  position: relative;
+  height: 4px;
+  margin-top: 6px;
+  border-radius: 2px;
+  background: rgba(91, 194, 240, 0.15);
+  overflow: hidden;
+}
+.hud3d-map-fill {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, var(--accent-deep), var(--accent));
+  box-shadow: 0 0 8px rgba(91, 194, 240, 0.8);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.4s ease-out;
+}
+
+/* power-ups ativos, com o tempo restante */
+.hud3d-chips {
+  display: flex;
+  gap: 6px;
+}
+.hud3d-chip {
+  display: none;
+  align-items: center;
+  gap: 5px;
+  margin-top: 7px;
+  padding: 3px 7px 3px 5px;
+  border-radius: 999px;
+  border: 1px solid rgba(91, 194, 240, 0.55);
+  background: rgba(18, 74, 128, 0.6);
+}
+.hud3d-chip.is-on {
+  display: inline-flex;
+}
+.hud3d-chip svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: #cbefff;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.hud3d-chip i {
+  position: relative;
+  display: block;
+  width: 26px;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(203, 239, 255, 0.2);
+  overflow: hidden;
+}
+.hud3d-chip i b {
+  position: absolute;
+  inset: 0;
+  background: #cbefff;
+  transform-origin: left center;
+}
+.hud3d.is-duo .hud3d-chip i {
+  width: 16px;
+}
+
+.hud3d-divider {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-1px);
+  background: rgba(33, 74, 107, 0.9);
+}
+
+.hud3d-count {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 38%;
+  text-align: center;
+  font-weight: 800;
+  font-size: clamp(64px, 22vw, 112px);
+  color: var(--accent);
+  text-shadow: 0 0 24px rgba(91, 194, 240, 0.55);
+  opacity: 0;
+}
+.hud3d-count.is-on {
+  animation: hud3d-pop 700ms ease-out both;
+}
+@keyframes hud3d-pop {
+  0% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+  25% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+
+/* pulso do numero ao pontuar */
+.hud3d-row b.is-pop {
+  animation: hud3d-num 260ms ease-out;
+}
+@keyframes hud3d-num {
+  0% {
+    transform: scale(1.25);
+    text-shadow: 0 0 14px rgba(91, 194, 240, 0.9);
+  }
+  100% {
+    transform: scale(1);
+    text-shadow: none;
+  }
+}
+.hud3d-row b {
+  display: inline-block;
+  transform-origin: left center;
+}
+
+/* aviso de municipio conectado */
+.hud3d-toast {
+  position: absolute;
+  left: 50%;
+  top: 24%;
+  transform: translateX(-50%);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  white-space: nowrap;
+  color: var(--ink);
+  background: rgba(18, 74, 128, 0.75);
+  border: 1px solid var(--accent);
+  box-shadow: 0 0 18px rgba(91, 194, 240, 0.45);
+  opacity: 0;
+}
+.hud3d-toast.is-left {
+  left: 25%;
+  font-size: 9px;
+  padding: 4px 8px;
+}
+.hud3d-toast.is-right {
+  left: 75%;
+  font-size: 9px;
+  padding: 4px 8px;
+}
+.hud3d-toast.is-on {
+  animation: hud3d-toast 1400ms ease-out both;
+}
+@keyframes hud3d-toast {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+  15%,
+  70% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -6px);
+  }
+}
+
+/* clarao ambar na batida */
+.hud3d-flash {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  box-shadow: inset 0 0 90px 20px rgba(242, 162, 74, 0.75);
+}
+.hud3d-flash.is-left {
+  right: 50%;
+}
+.hud3d-flash.is-right {
+  left: 50%;
+}
+.hud3d-flash.is-on {
+  animation: hud3d-flash 650ms ease-out both;
+}
+@keyframes hud3d-flash {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.hud3d-debug {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  font-family: "IBM Plex Sans", monospace;
+  font-size: 11px;
+  padding: 3px 6px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #9fe0ff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hud3d-count.is-on {
+    animation: none;
+    opacity: 1;
+  }
+  .hud3d-row b.is-pop,
+  .hud3d-flash.is-on {
+    animation: none;
+  }
+}

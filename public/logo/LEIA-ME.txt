@@ -1,0 +1,14 @@
+Logos oficiais da Alicerce em vetor (SVG), fundo transparente:
+
+  alicerce-branca.svg    simbolo + palavra ALICERCE em branco (para fundo escuro)
+  alicerce-simbolo.svg   apenas o simbolo, em branco
+
+Foram vetorizados a partir dos planos de fundo oficiais da Alicerce
+(versao branca chapada). Para trocar a cor, edite o atributo fill do path.
+
+Onde sao usados:
+  index.html       tela de inicio (bloco .brand)
+  ../favicon.svg   simbolo branco sobre o quadrado marinho
+
+Se receber os arquivos-mestre do design (SVG, AI ou PDF), substitua estes
+mantendo os mesmos nomes.

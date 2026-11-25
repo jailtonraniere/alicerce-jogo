@@ -1,0 +1,25 @@
+{
+  "name": "alicerce-run",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Alicerce Run: jogo web (endless runner) de ativacao de marca da Alicerce.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host"
+  },
+  "dependencies": {
+    "@fontsource/ibm-plex-sans": "5.1.0",
+    "@fontsource/saira": "5.1.0",
+    "@supabase/supabase-js": "2.45.4",
+    "phaser": "3.80.1",
+    "three": "0.187.0"
+  },
+  "devDependencies": {
+    "@gltf-transform/core": "4.5.1",
+    "@types/three": "0.187.0",
+    "typescript": "5.6.3",
+    "vite": "5.4.10"
+  }
+}
