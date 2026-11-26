@@ -21,7 +21,7 @@
         <div class="brand">
           <img src="/logo/alicerce-branca.svg" alt="Alicerce" width="139" height="32" />
         </div>
-        <h1>ALICERCE <span>RUN</span></h1>
+        <h1 aria-label="Alicerce Run"><span>RUN</span></h1>
         <p class="tagline">Construa a base da boa gestão pública</p>
 
         <div class="mode-toggle" role="tablist" aria-label="Modo de jogo">
@@ -93,17 +93,20 @@
         </div>
         <div class="muni" id="go-muni"></div>
 
-        <form id="lead-form" novalidate>
+        <form id="rank-form" novalidate>
           <p class="form-legend">Entre no ranking do evento</p>
-          <input type="text" name="nome" placeholder="Nome" autocomplete="name" required />
-          <input type="text" name="orgao" placeholder="Órgão ou município" autocomplete="organization" />
-          <input type="text" name="cargo" placeholder="Cargo" autocomplete="organization-title" />
-          <input type="text" name="contato" placeholder="E-mail ou telefone (opcional)" autocomplete="email" />
-          <label class="consent">
-            <input type="checkbox" name="consentimento" />
-            <span>Autorizo a Alicerce a me contatar sobre suas soluções (LGPD). Você pode jogar e entrar no ranking sem marcar esta opção.</span>
-          </label>
-          <button type="submit" class="primary">🏆 Entrar no ranking</button>
+          <div class="rank-fields">
+            <label class="rank-field" data-player="0">
+              <span>Seu nome</span>
+              <input type="text" name="nome0" maxlength="30" autocomplete="nickname" autocapitalize="words" enterkeyhint="done" placeholder="Como quer aparecer no ranking" />
+            </label>
+            <label class="rank-field is-hidden" data-player="1">
+              <span>Jogador 2</span>
+              <input type="text" name="nome1" maxlength="30" autocomplete="off" autocapitalize="words" enterkeyhint="done" placeholder="Nome do jogador 2" />
+            </label>
+          </div>
+          <button type="submit" class="primary" id="rank-submit">Salvar no ranking</button>
+          <p class="rank-status" id="rank-status" role="status" aria-live="polite"></p>
         </form>
 
         <div class="ranking">
@@ -112,10 +115,35 @@
         </div>
 
         <div class="go-actions">
-          <button id="replay-btn" class="primary">🔁 Jogar de novo</button>
-          <button id="share-btn" class="ghost">🔗 Compartilhar</button>
+          <button id="replay-btn" class="primary">Jogar de novo</button>
+          <div class="go-row">
+            <button id="home-btn" class="ghost">Início</button>
+            <button id="share-btn" class="ghost">Compartilhar</button>
+          </div>
         </div>
       </section>
+
+      <!-- Pausa -->
+      <button id="pause-btn" class="pause-btn is-hidden" aria-label="Pausar">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1" /><rect x="14" y="5" width="4" height="14" rx="1" /></svg>
+      </button>
+      <section id="pause-screen" class="overlay overlay-pause is-hidden" aria-label="Jogo pausado">
+        <h2>PAUSADO</h2>
+        <p class="tagline">O jogo para enquanto esta tela estiver aberta.</p>
+        <div class="go-actions">
+          <button id="resume-btn" class="primary">Continuar</button>
+          <div class="go-row">
+            <button id="restart-btn" class="ghost">Reiniciar</button>
+            <button id="pause-home-btn" class="ghost">Início</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Celular deitado -->
+      <div id="rotate" role="alert">
+        <svg viewBox="0 0 48 48" aria-hidden="true"><rect x="14" y="6" width="20" height="36" rx="4" /><path d="M24 36.5h.01" /></svg>
+        <p>Gire o celular para jogar em pé.</p>
+      </div>
 
       <div id="toast" class="is-hidden" role="status"></div>
     </div>

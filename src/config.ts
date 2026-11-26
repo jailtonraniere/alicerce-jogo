@@ -43,8 +43,8 @@ export const EVENTO = import.meta.env.VITE_EVENTO ?? "demonstracao";
 export const CHARACTERS: Character[] = [
   { id: "gestora", nome: "Gestora", emoji: "\u{1F469}‍\u{1F4BC}" },
   { id: "analista", nome: "Analista de dados", emoji: "\u{1F9D1}‍\u{1F4BB}" },
-  { id: "tecnico", nome: "Tecnico", emoji: "\u{1F468}‍\u{1F527}" },
-  { id: "secretaria", nome: "Secretaria", emoji: "\u{1F469}‍\u{1F3EB}" },
+  { id: "tecnico", nome: "Técnico", emoji: "\u{1F468}‍\u{1F527}" },
+  { id: "secretaria", nome: "Secretária", emoji: "\u{1F469}‍\u{1F3EB}" },
 ];
 
 // Parametros de balanceamento do jogo.

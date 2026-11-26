@@ -138,7 +138,8 @@ export class Hud {
     this.count.className = "hud3d-count";
   }
 
-  update(sim: GameSim, stats: EngineStats) {
+  // countOverride: contagem mostrada no lugar da do jogo (retomada da pausa)
+  update(sim: GameSim, stats: EngineStats, countOverride?: CountdownLabel) {
     sim.runners.forEach((r, i) => {
       const p = this.panels[i];
       if (!p) return;
@@ -171,7 +172,7 @@ export class Hud {
       p.alive = r.alive;
     });
 
-    const c = sim.countdown;
+    const c = countOverride !== undefined ? countOverride : sim.countdown;
     if (c !== this.lastCount) {
       this.lastCount = c;
       this.count.textContent = c ?? "";

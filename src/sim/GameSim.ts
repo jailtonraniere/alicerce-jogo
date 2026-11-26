@@ -88,6 +88,7 @@ export class GameSim {
       pontosP2: p2?.pontos ?? 0,
       municipiosP2: p2?.municipios ?? 0,
       vencedor,
+      duracaoMs: Math.round(this.elapsed),
     };
   }
 }

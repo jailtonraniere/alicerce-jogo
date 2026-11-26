@@ -8,8 +8,8 @@ import type { RunnerSim } from "../sim/RunnerSim";
 
 const SWIPE_MIN_PX = 18;
 
-function act(r: RunnerSim | undefined, action: string) {
-  if (!r) return;
+function act(r: RunnerSim | undefined, action: string, active: () => boolean) {
+  if (!r || !active()) return;
   if (action === "left") r.move(-1);
   else if (action === "right") r.move(1);
   else if (action === "jump") r.doJump();
@@ -24,7 +24,8 @@ const ARROWS: Record<string, string> = {
   ArrowDown: "duck",
 };
 
-export function attachInput(root: HTMLElement, sim: GameSim): () => void {
+// active(): se falso (pausa, contagem de retomada), os comandos sao ignorados.
+export function attachInput(root: HTMLElement, sim: GameSim, active: () => boolean = () => true): () => void {
   const duo = sim.cfg.mode === "duo";
   const [p1, p2] = sim.runners;
 
@@ -33,9 +34,9 @@ export function attachInput(root: HTMLElement, sim: GameSim): () => void {
     if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA")) return;
     const letter = P1_KEYS[e.key.toLowerCase()];
     const arrow = ARROWS[e.key];
-    if (letter) act(p1, letter);
+    if (letter) act(p1, letter, active);
     else if (arrow) {
-      act(duo ? p2 : p1, arrow);
+      act(duo ? p2 : p1, arrow, active);
       e.preventDefault();
     }
   };
@@ -52,13 +53,13 @@ export function attachInput(root: HTMLElement, sim: GameSim): () => void {
     if (Math.abs(dx) < SWIPE_MIN_PX && Math.abs(dy) < SWIPE_MIN_PX) return;
     const rect = root.getBoundingClientRect();
     const r = duo && start.x - rect.left > rect.width / 2 ? p2 : p1;
-    if (Math.abs(dx) > Math.abs(dy)) act(r, dx > 0 ? "right" : "left");
-    else act(r, dy < 0 ? "jump" : "duck");
+    if (Math.abs(dx) > Math.abs(dy)) act(r, dx > 0 ? "right" : "left", active);
+    else act(r, dy < 0 ? "jump" : "duck", active);
   };
 
   // botoes DOM (modo 1 jogador), emitidos pela camada de UI
   const onControl = (payload: { player: number; action: string }) => {
-    act(sim.runners[payload.player] ?? p1, payload.action);
+    act(sim.runners[payload.player] ?? p1, payload.action, active);
   };
 
   window.addEventListener("keydown", onKey);

@@ -32,6 +32,7 @@ const QUALITY_MIN_FPS = 45;
 const QUALITY_UPGRADE_FPS = 57;
 const MENU_SCROLL_PX = 110; // velocidade do cenario atras da tela de inicio
 const MENU_FRAME_MS = 31; // ~30 fps na tela de inicio
+const RESUME_COUNT_MS = 2100; // contagem 3, 2, 1 ao sair da pausa
 const EXPOSURE = 1.05;
 const MENU_EXPOSURE = 0.5; // cenario escurecido atras da tela de inicio
 
@@ -60,7 +61,10 @@ class Engine3D implements GameEngine {
   private audio: GameAudio | null = null;
   private lastCount: CountdownLabel = null;
   private raf = 0;
-  private looping: "none" | "menu" | "game" = "none";
+  private looping: "none" | "menu" | "game" | "paused" = "none";
+  private idleScene = true; // a cena atual e a do menu (sem partida)
+  private resumeMs = 0; // contagem 3, 2, 1 ao sair da pausa
+  private resumeLabel: CountdownLabel = null;
   private last = 0;
   private time = 0;
 
@@ -119,12 +123,21 @@ class Engine3D implements GameEngine {
     this.tracks[0].setPlayerVisible(false);
     this.hud.setVisible(false);
     this.resize();
+
+    // Pausa automatica: trocar de app, bloquear a tela, celular deitado.
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) this.autoPause();
+    });
+    const landscape = window.matchMedia("(orientation: landscape) and (max-height: 500px)");
+    landscape.addEventListener?.("change", (e) => {
+      if (e.matches) this.autoPause();
+    });
   }
 
   // ---- tela de inicio ----
 
   showMenu(state: MenuState) {
-    if (this.looping === "game") return;
+    if (!this.idleScene) this.exitGame();
     this.menu.show(state);
     this.hud.setVisible(false);
     this.runLoop("menu");
@@ -156,6 +169,8 @@ class Engine3D implements GameEngine {
   start(cfg: GameConfig) {
     this.menu.hide();
     this.detachInput?.();
+    this.idleScene = false;
+    this.resumeMs = 0;
     this.build(cfg);
     this.resize();
     this.hud.setVisible(true);
@@ -168,7 +183,8 @@ class Engine3D implements GameEngine {
     this.tracks.forEach((t, i) => t.setAudio(audio, this.tracks.length === 2 ? (i === 0 ? -0.6 : 0.6) : 0));
     this.lastCount = null;
 
-    this.detachInput = attachInput(this.root, this.sim!);
+    // controles ignorados na pausa e na contagem de retomada
+    this.detachInput = attachInput(this.root, this.sim!, () => this.looping === "game" && this.resumeMs <= 0);
     this.sampleFrames = 0;
     this.sampleAcc = 0;
     this.runLoop("game");
@@ -203,6 +219,43 @@ class Engine3D implements GameEngine {
     }
   }
 
+  // ---- pausa ----
+
+  pause() {
+    if (this.looping !== "game") return;
+    cancelAnimationFrame(this.raf);
+    this.looping = "paused";
+    this.audio?.stopMusic();
+  }
+
+  resume() {
+    if (this.looping !== "paused") return;
+    this.resumeMs = RESUME_COUNT_MS;
+    this.resumeLabel = null;
+    this.runLoop("game");
+  }
+
+  private autoPause() {
+    if (this.looping !== "game") return;
+    this.pause();
+    bus.emit("autopause");
+  }
+
+  // Encerra a partida (em andamento, pausada ou terminada) e volta a cena do menu.
+  private exitGame() {
+    cancelAnimationFrame(this.raf);
+    this.looping = "none";
+    this.detachInput?.();
+    this.detachInput = null;
+    this.audio?.stopMusic();
+    this.resumeMs = 0;
+    this.build({ mode: "single", characterP1: CHARACTERS[0], characterP2: CHARACTERS[1], sound: false });
+    this.tracks[0].setPlayerVisible(false);
+    this.hud.setVisible(false);
+    this.idleScene = true;
+    this.resize();
+  }
+
   private runLoop(kind: "menu" | "game") {
     cancelAnimationFrame(this.raf);
     this.looping = kind;
@@ -223,6 +276,20 @@ class Engine3D implements GameEngine {
     const sim = this.sim!;
     const wasRunning = sim.running;
     const cpu0 = performance.now();
+
+    // retomada da pausa: contagem 3, 2, 1 com o jogo congelado
+    if (this.resumeMs > 0) {
+      this.resumeMs -= dt;
+      const step = RESUME_COUNT_MS / 3;
+      const label: CountdownLabel = this.resumeMs > 2 * step ? "3" : this.resumeMs > step ? "2" : this.resumeMs > 0 ? "1" : null;
+      if (label && label !== this.resumeLabel && sim.cfg.sound) this.audio?.countdown(label);
+      this.resumeLabel = label;
+      if (this.resumeMs <= 0 && sim.running && sim.cfg.sound) this.audio?.startMusic();
+      this.render(false);
+      this.hud.update(sim, this.stats, label);
+      this.raf = requestAnimationFrame(this.loop);
+      return;
+    }
 
     const result = sim.update(dt);
     for (const t of this.tracks) t.update(dt, sim.baseSpeed, sim.running);
@@ -341,6 +408,6 @@ class Engine3D implements GameEngine {
     const d = this.tracks[0]?.camDist ?? 14;
     this.fog.near = d + 14;
     this.fog.far = d + 60;
-    if (this.looping === "none") this.render(this.menu.visible);
+    if (this.looping === "none" || this.looping === "paused") this.render(this.menu.visible);
   }
 }

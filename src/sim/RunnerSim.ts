@@ -189,6 +189,8 @@ export class RunnerSim {
       if (e.alive && e.y > DESPAWN_Y) {
         e.alive = false;
         this.events.push({ type: "despawn", entity: e });
+        // combo e "acertos em sequencia": deixar um dado ou indicador passar zera a sequencia
+        if (e.kind === "data" || e.kind === "indicator") this.combo = 1;
       }
     }
     this.entities = this.entities.filter((e) => e.alive);

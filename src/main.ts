@@ -7,8 +7,9 @@ import "@fontsource/ibm-plex-sans/600.css";
 import "./style.css";
 
 import { bus, CHARACTERS, EVENTO } from "./config";
-import { getTopRanking, submitLead, submitScore, online } from "./supabase";
+import { getTopRanking, saveScores, rankOf, flushPending, online, type SaveResult } from "./supabase";
 import { unlockAudio } from "./audioUnlock";
+import { MAP_FULL_AT } from "./util/stateMapData";
 import type { GameEngine } from "./engine";
 import type { GameConfig, GameMode, GameResult, RankingEntry } from "./types";
 
@@ -23,6 +24,7 @@ const charIndex = [0, 1]; // P1, P2
 const startScreen = qs<HTMLElement>("#start-screen");
 const gameoverScreen = qs<HTMLElement>("#gameover-screen");
 const touchControls = qs<HTMLElement>("#touch-controls");
+const pauseBtn = qs<HTMLButtonElement>("#pause-btn");
 const toastEl = qs<HTMLElement>("#toast");
 
 // ---- Motor do jogo (3D, Three.js) ----
@@ -43,6 +45,7 @@ enginePromise.catch(() => {
 });
 
 let lastResult: GameResult | null = null;
+let lastConfig: GameConfig | null = null;
 let menuVisible = true;
 
 // Avisa o motor (3D) do que esta selecionado na tela de inicio.
@@ -125,6 +128,7 @@ function buildConfig(): GameConfig {
 
 function startGame() {
   const cfg = buildConfig();
+  lastConfig = cfg;
   menuVisible = false;
   if (cfg.sound) unlockAudio(); // precisa acontecer dentro do clique
   if (!startScreen.classList.contains("is-hidden")) {
@@ -139,6 +143,8 @@ function startGame() {
   }
   gameoverScreen.classList.add("is-hidden");
   touchControls.classList.toggle("is-hidden", cfg.mode === "duo");
+  pauseBtn.classList.remove("is-hidden");
+  inGame = true;
   void enginePromise.then((engine) => engine.start(cfg));
 }
 
@@ -146,42 +152,99 @@ qs<HTMLButtonElement>("#play-btn").addEventListener("click", startGame);
 qs<HTMLButtonElement>("#replay-btn").addEventListener("click", startGame);
 
 // ---- Fim de jogo ----
+const LS_NOME = "alicerce_run_nome";
+const LS_RECORDE = "alicerce_run_recorde";
+const rankForm = qs<HTMLFormElement>("#rank-form");
+const rankSubmit = qs<HTMLButtonElement>("#rank-submit");
+const rankStatus = qs<HTMLElement>("#rank-status");
+let savedThisMatch = false;
+
+function lsGet(key: string) {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+function lsSet(key: string, value: string) {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    /* armazenamento indisponivel */
+  }
+}
+
+// Titulo conforme o resultado (sem comemorar uma partida de zero ponto).
+function resultTitle(r: GameResult, recorde: boolean) {
+  if (r.mode === "duo") {
+    if (r.vencedor === "p1") return "VITÓRIA DO <span>JOGADOR 1</span>";
+    if (r.vencedor === "p2") return "VITÓRIA DO <span>JOGADOR 2</span>";
+    return "<span>EMPATE</span>";
+  }
+  const m = r.municipiosP1;
+  if (m >= MAP_FULL_AT) return "MAPA <span>COMPLETO</span>";
+  if (recorde) return "NOVO <span>RECORDE</span>";
+  if (m >= 6) return "VISÃO <span>CONSOLIDADA</span>";
+  if (m >= 1) return "BOA <span>CORRIDA</span>";
+  return "FIM DE <span>JOGO</span>";
+}
+
 bus.on("gameover", (result: GameResult) => {
   lastResult = result;
   touchControls.classList.add("is-hidden");
+  pauseBtn.classList.add("is-hidden");
+  savedThisMatch = false;
 
-  const primPontos = Math.max(result.pontosP1, result.pontosP2);
-  const primMuni = Math.max(result.municipiosP1, result.municipiosP2);
+  const duo = result.mode === "duo";
+  const recordeAnterior = Number(lsGet(LS_RECORDE) ?? 0);
+  const recorde = !duo && result.pontosP1 > 0 && result.pontosP1 > recordeAnterior;
+  if (recorde) lsSet(LS_RECORDE, String(result.pontosP1));
 
-  let title = 'VISÃO <span>CONSOLIDADA!</span>';
-  if (result.mode === "duo") {
-    if (result.vencedor === "p1") title = "JOGADOR 1 <span>VENCEU!</span>";
-    else if (result.vencedor === "p2") title = "JOGADOR 2 <span>VENCEU!</span>";
-    else title = "<span>EMPATE!</span>";
-  }
-  qs<HTMLElement>("#go-title").innerHTML = title;
-  qs<HTMLElement>("#go-score").textContent = primPontos.toLocaleString("pt-BR");
-  const muniLabel = primMuni === 1 ? "município conectado" : "municípios conectados";
-  qs<HTMLElement>("#go-muni").textContent = `🗺 ${primMuni} ${muniLabel}`;
+  const pontos = duo ? Math.max(result.pontosP1, result.pontosP2) : result.pontosP1;
+  const muni = duo ? Math.max(result.municipiosP1, result.municipiosP2) : result.municipiosP1;
+  qs<HTMLElement>("#go-title").innerHTML = resultTitle(result, recorde);
+  qs<HTMLElement>("#go-score").textContent = pontos.toLocaleString("pt-BR");
+  qs<HTMLElement>("#go-muni").textContent =
+    muni === 1 ? "1 município conectado" : `${muni.toLocaleString("pt-BR")} municípios conectados`;
+
+  // formulario: so o nome (no modo 2 jogadores, um nome para cada)
+  const [n0, n1] = [qs<HTMLInputElement>('input[name="nome0"]'), qs<HTMLInputElement>('input[name="nome1"]')];
+  qs<HTMLElement>('.rank-field[data-player="1"]').classList.toggle("is-hidden", !duo);
+  qs<HTMLElement>('.rank-field[data-player="0"] span').textContent = duo ? "Jogador 1" : "Seu nome";
+  n0.value = lsGet(LS_NOME) ?? "";
+  n1.value = "";
+  rankForm.classList.remove("is-done");
+  rankSubmit.disabled = false;
+  rankSubmit.textContent = "Salvar no ranking";
+  rankStatus.textContent = "";
 
   gameoverScreen.classList.remove("is-hidden");
   void refreshRanking();
 });
 
 // ---- Ranking ----
-async function refreshRanking() {
+type Me = { nome: string; pontos: number };
+
+async function refreshRanking(me: Me[] = []) {
   const list = qs<HTMLOListElement>("#ranking-list");
   list.innerHTML = '<li class="empty">Carregando...</li>';
   const top = await getTopRanking(8);
   if (!top.length) {
-    list.innerHTML = `<li class="empty">${online ? "Seja o primeiro no ranking." : "Ranking local: jogue e cadastre-se."}</li>`;
+    list.innerHTML = `<li class="empty">${
+      online ? "Seja a primeira pessoa no ranking do evento." : "Ainda não há pontuações neste aparelho."
+    }</li>`;
     return;
   }
   list.innerHTML = "";
+  const marked = new Set<Me>();
   top.forEach((e, i) => {
     const li = document.createElement("li");
-    const org = e.orgao ? `<span class="org"> · ${escapeHtml(e.orgao)}</span>` : "";
-    li.innerHTML = `<span class="who">${i + 1}. ${escapeHtml(e.nome)}${org}</span><span class="pts">${e.pontos.toLocaleString("pt-BR")}</span>`;
+    const mine = me.find((m) => !marked.has(m) && m.nome === e.nome && m.pontos === e.pontos);
+    if (mine) {
+      marked.add(mine);
+      li.classList.add("is-me");
+    }
+    li.innerHTML = `<span class="who">${i + 1}. ${escapeHtml(e.nome)}</span><span class="pts">${e.pontos.toLocaleString("pt-BR")}</span>`;
     list.appendChild(li);
   });
 }
@@ -192,40 +255,113 @@ function escapeHtml(s: string) {
   return d.innerHTML;
 }
 
-// ---- Formulario de lead / ranking ----
-qs<HTMLFormElement>("#lead-form").addEventListener("submit", async (ev) => {
+function cleanName(v: FormDataEntryValue | null) {
+  return String(v ?? "").replace(/\s+/g, " ").trim().slice(0, 30);
+}
+
+// ---- Salvar no ranking (so nome) ----
+rankForm.addEventListener("submit", async (ev) => {
   ev.preventDefault();
-  if (!lastResult) return;
-  const form = ev.currentTarget as HTMLFormElement;
-  const data = new FormData(form);
-  const nome = String(data.get("nome") ?? "").trim();
-  if (!nome) {
-    showToast("Informe um nome para entrar no ranking.");
+  if (!lastResult || !lastConfig || savedThisMatch) return;
+  const r = lastResult;
+  const cfg = lastConfig;
+  const data = new FormData(rankForm);
+  const nome0 = cleanName(data.get("nome0"));
+  const nome1 = r.mode === "duo" ? cleanName(data.get("nome1")) : "";
+  if (!nome0 && !nome1) {
+    rankStatus.textContent = "Digite um nome para entrar no ranking.";
+    qs<HTMLInputElement>('input[name="nome0"]').focus();
     return;
   }
-  const orgao = String(data.get("orgao") ?? "").trim() || null;
-  const cargo = String(data.get("cargo") ?? "").trim() || null;
-  const contato = String(data.get("contato") ?? "").trim();
-  const consent = data.get("consentimento") === "on";
-  const pontos = Math.max(lastResult.pontosP1, lastResult.pontosP2);
-  const municipios = Math.max(lastResult.municipiosP1, lastResult.municipiosP2);
 
-  const entry: RankingEntry = { nome, orgao, cargo, pontos, municipios, evento: EVENTO };
-  await submitScore(entry);
-  if (consent && contato) {
-    await submitLead({
-      nome,
-      contato,
-      orgao,
-      cargo,
-      consentimento_lgpd: true,
-      evento: EVENTO,
-      pontos,
-    });
+  const entries: RankingEntry[] = [];
+  const base = { evento: EVENTO, duracao_ms: r.duracaoMs };
+  if (nome0) entries.push({ ...base, nome: nome0, pontos: r.pontosP1, municipios: r.municipiosP1, personagem: cfg.characterP1.id });
+  if (nome1) entries.push({ ...base, nome: nome1, pontos: r.pontosP2, municipios: r.municipiosP2, personagem: cfg.characterP2.id });
+
+  savedThisMatch = true;
+  rankSubmit.disabled = true;
+  rankSubmit.textContent = "Salvando...";
+  (document.activeElement as HTMLElement | null)?.blur(); // fecha o teclado do celular
+  if (nome0) lsSet(LS_NOME, nome0);
+
+  const res = await saveScores(entries);
+  const msg: Record<SaveResult, string> = {
+    salvo: "Pontuação salva no ranking do evento.",
+    local: "Pontuação salva neste aparelho.",
+    pendente: "Sem conexão agora. A pontuação fica guardada e sobe quando a internet voltar.",
+    recusado: "O ranking não aceitou esta pontuação.",
+  };
+  rankSubmit.textContent = res === "recusado" ? "Não salvo" : "Salvo";
+  rankForm.classList.add("is-done");
+  rankStatus.textContent = msg[res];
+
+  if (res === "salvo" || res === "local") {
+    const pos = await rankOf(entries[0].pontos);
+    if (pos) rankStatus.textContent += ` ${entries.length > 1 ? "Jogador 1" : "Você"} ficou em ${pos}º lugar.`;
+    void refreshRanking(entries.map((e) => ({ nome: e.nome, pontos: e.pontos })));
   }
-  form.reset();
-  showToast("Pronto, você está no ranking!");
-  void refreshRanking();
+});
+
+// ---- Voltar ao inicio ----
+function goHome() {
+  gameoverScreen.classList.add("is-hidden");
+  touchControls.classList.add("is-hidden");
+  pauseBtn.classList.add("is-hidden");
+  startScreen.classList.remove("is-hidden", "is-leaving");
+  startScreen.scrollTop = 0;
+  menuVisible = true;
+  syncMenu();
+}
+qs<HTMLButtonElement>("#home-btn").addEventListener("click", goHome);
+
+// ---- Pausa ----
+// Botao no canto, tecla Esc/P e pausa automatica (trocar de app, bloquear a
+// tela, celular deitado). Ao continuar, o motor faz uma contagem 3, 2, 1.
+const pauseScreen = qs<HTMLElement>("#pause-screen");
+let inGame = false;
+
+function showPauseScreen() {
+  pauseScreen.classList.remove("is-hidden");
+  pauseBtn.classList.add("is-hidden");
+  touchControls.classList.add("is-hidden");
+}
+
+function pauseGame() {
+  if (!inGame || !pauseScreen.classList.contains("is-hidden")) return;
+  void enginePromise.then((engine) => engine.pause?.());
+  showPauseScreen();
+}
+
+function resumeGame() {
+  pauseScreen.classList.add("is-hidden");
+  pauseBtn.classList.remove("is-hidden");
+  touchControls.classList.toggle("is-hidden", lastConfig?.mode === "duo");
+  void enginePromise.then((engine) => engine.resume?.());
+}
+
+pauseBtn.addEventListener("click", pauseGame);
+qs<HTMLButtonElement>("#resume-btn").addEventListener("click", resumeGame);
+qs<HTMLButtonElement>("#restart-btn").addEventListener("click", () => {
+  pauseScreen.classList.add("is-hidden");
+  startGame();
+});
+qs<HTMLButtonElement>("#pause-home-btn").addEventListener("click", () => {
+  pauseScreen.classList.add("is-hidden");
+  inGame = false;
+  goHome();
+});
+bus.on("autopause", () => {
+  if (inGame) showPauseScreen();
+});
+window.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape" && e.key.toLowerCase() !== "p") return;
+  if ((e.target as HTMLElement | null)?.tagName === "INPUT") return;
+  if (!pauseScreen.classList.contains("is-hidden")) resumeGame();
+  else pauseGame();
+});
+bus.on("gameover", () => {
+  inGame = false;
 });
 
 // ---- Compartilhar ----
@@ -278,3 +414,6 @@ if (import.meta.env.PROD && "serviceWorker" in navigator) {
 // ---- Inicializacao ----
 setMode("single");
 renderChars();
+// pontuacoes que ficaram guardadas por falta de rede sobem agora ou quando a rede voltar
+void flushPending();
+window.addEventListener("online", () => void flushPending());
