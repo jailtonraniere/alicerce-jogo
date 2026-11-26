@@ -46,23 +46,19 @@ npm run preview   # serve o build local
 - **Medir no aparelho:** abra com `?3d&debug` para ver fps, tempo de CPU por quadro, draw calls, resolução interna e nível de qualidade no canto da tela.
 - **Referência medida (PC com GPU integrada, Chrome):** 1 jogador a 60 fps e cerca de 40 draw calls; 2 jogadores a 56 a 60 fps e cerca de 65 draw calls. Com a CPU desacelerada 4 vezes (simulando um celular intermediário), 1 jogador fica entre 52 e 60 fps e 2 jogadores entre 37 e 52 fps. Falta medir em celulares reais.
 
-## Configurar o Supabase (ranking e leads)
+## Configurar o Supabase (ranking do evento)
+
+Por enquanto o ranking guarda **só o nome** (sem contato, órgão ou cargo). Sem Supabase, o jogo funciona e o ranking fica salvo só no aparelho.
 
 1. Crie um projeto no Supabase (ou reaproveite um existente).
-2. Rode a migração `supabase/migrations/20261125000001_alicerce_run.sql` (SQL Editor ou CLI). Ela cria as tabelas `ranking` e `lead`, a RLS (anon só insere), a view pública `v_ranking_top` e os índices.
-3. Copie `.env.example` para `.env.local` e preencha:
+2. No **SQL Editor**, rode o arquivo `supabase/migrations/20261126000001_ranking_so_nome.sql` inteiro. Ele funciona num projeto novo e também em cima da migração anterior. Cria a tabela `ranking`, as regras de validação, as permissões e a view pública `v_ranking_top`.
+3. Em **Project Settings > API**, copie a **Project URL** e a chave **anon public**. Nunca use a `service_role` no jogo.
+4. No GitHub, em **Settings > Secrets and variables > Actions**: Variables `VITE_SUPABASE_URL` (a URL) e `VITE_EVENTO` (ex.: `congemas-2026`); Secret `VITE_SUPABASE_ANON_KEY` (a anon key). Depois rode o workflow de publicação de novo.
+5. Para testar no computador, copie `.env.example` para `.env.local` (fica fora do Git) e preencha os mesmos três valores.
 
-```
-VITE_SUPABASE_URL=https://SEU-PROJETO.supabase.co
-VITE_SUPABASE_ANON_KEY=sua-anon-key
-VITE_EVENTO=congemas-2026
-```
+Como a segurança funciona: o visitante só consegue **gravar** nome, pontos, municípios, personagem, evento e duração, e só **ler** as colunas públicas do ranking. O banco recusa pontuação incoerente (municípios que não batem com os pontos, ou pontos acima do máximo possível para o tempo jogado). Se a rede cair na hora de salvar, a pontuação fica guardada no aparelho e sobe quando a conexão voltar.
 
-Use sempre a **anon key** (nunca a service role) no front. A segurança fica na RLS: o anônimo só consegue inserir pontuação e lead válidos, e lê apenas a view do ranking.
-
-### Ver os leads
-
-Os leads ficam na tabela `lead`, que o anônimo não lê. Consulte pelo painel do Supabase ou exporte via service role no backend do comercial. Só são gravados com consentimento LGPD explícito.
+Moderação: o arquivo da migração traz, no final, os comandos para ver o ranking de um evento, remover uma linha indevida e zerar um evento.
 
 ## Publicar no GitHub Pages (configurado)
 
