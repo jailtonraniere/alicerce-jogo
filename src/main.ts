@@ -148,7 +148,42 @@ function startGame() {
   void enginePromise.then((engine) => engine.start(cfg));
 }
 
-qs<HTMLButtonElement>("#play-btn").addEventListener("click", startGame);
+// ---- Como jogar: na primeira partida do aparelho, e pelo botao "?" ----
+const howto = qs<HTMLElement>("#howto");
+const LS_TUTORIAL = "alicerce_run_tutorial_v1";
+
+function openHowto(first: boolean) {
+  qs<HTMLElement>("#howto-close").classList.toggle("is-hidden", first);
+  qs<HTMLElement>("#howto-play").textContent = first ? "Entendi, jogar" : "Jogar";
+  const keys = qs<HTMLElement>("#howto-keys");
+  keys.classList.toggle("is-duo", mode === "duo"); // no celular, so a dica de 2 jogadores aparece
+  keys.textContent =
+    mode === "duo"
+      ? "Dois jogadores: cada um desliza na sua metade da tela. No computador: A D W S e setas."
+      : "No computador: setas ou A D W S. Pausa: Esc.";
+  howto.classList.remove("is-hidden");
+  howto.scrollTop = 0;
+}
+
+qs<HTMLButtonElement>("#play-btn").addEventListener("click", () => {
+  try {
+    if (localStorage.getItem(LS_TUTORIAL)) return startGame();
+  } catch {
+    /* sem armazenamento: mostra a instrucao */
+  }
+  openHowto(true);
+});
+qs<HTMLButtonElement>("#howto-play").addEventListener("click", () => {
+  try {
+    localStorage.setItem(LS_TUTORIAL, "1");
+  } catch {
+    /* sem armazenamento */
+  }
+  howto.classList.add("is-hidden");
+  startGame();
+});
+qs<HTMLButtonElement>("#howto-close").addEventListener("click", () => howto.classList.add("is-hidden"));
+qs<HTMLButtonElement>("#help-btn").addEventListener("click", () => openHowto(false));
 qs<HTMLButtonElement>("#replay-btn").addEventListener("click", startGame);
 
 // ---- Fim de jogo ----

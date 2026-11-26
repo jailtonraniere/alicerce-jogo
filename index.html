@@ -18,6 +18,7 @@
 
       <!-- Tela de inicio -->
       <section id="start-screen" class="overlay">
+        <button id="help-btn" class="help-btn" aria-label="Como jogar">?</button>
         <div class="brand">
           <img src="/logo/alicerce-branca.svg" alt="Alicerce" width="139" height="32" />
         </div>
@@ -58,6 +59,30 @@
         </div>
         <p class="hint" id="controls-hint"></p>
         <p class="credits">Personagens 3D: Quaternius (CC0)</p>
+      </section>
+
+      <!-- Como jogar (primeira partida no aparelho, ou pelo botao "?") -->
+      <section id="howto" class="overlay overlay-howto is-hidden" aria-labelledby="howto-title">
+        <h2 id="howto-title">COMO <span>JOGAR</span></h2>
+        <ul class="howto-gestures">
+          <li><span class="gesture g-side" aria-hidden="true"></span><b>Deslize para os lados</b><small>troca de pista</small></li>
+          <li><span class="gesture g-up" aria-hidden="true"></span><b>Deslize para cima</b><small>pula</small></li>
+          <li><span class="gesture g-down" aria-hidden="true"></span><b>Deslize para baixo</b><small>abaixa</small></li>
+        </ul>
+        <div class="howto-rules">
+          <p><i class="dot dot-cyan" aria-hidden="true"></i><span>Colete os <b>dados</b> em ciano. Eles somam pontos e conectam municípios ao mapa do estado.</span></p>
+          <p><i class="dot dot-amber" aria-hidden="true"></i><span>Desvie dos <b>obstáculos</b> em laranja: pule, abaixe ou troque de pista.</span></p>
+          <p class="howto-powers">
+            <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 2.5-.6 6.6C17.8 16 15.4 19 12 21c-3.4-2-5.8-5-6.4-8.9L5 5.5z" /><path d="M9 12l2.2 2.2L15.5 10" /></svg>Escudo</span>
+            <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4v7a5 5 0 0010 0V4" /><path d="M5 4h4M15 4h4" /></svg>Ímã</span>
+            <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 14l6-6 6 6" /><path d="M6 19l6-6 6 6" /></svg>Turbo</span>
+          </p>
+        </div>
+        <p class="howto-keys" id="howto-keys">No computador: setas ou A D W S. Pausa: Esc.</p>
+        <div class="go-actions">
+          <button id="howto-play" class="primary">Entendi, jogar</button>
+          <button id="howto-close" class="ghost is-hidden">Fechar</button>
+        </div>
       </section>
 
       <!-- Aparelho sem suporte a 3D -->
