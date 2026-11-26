@@ -17,7 +17,8 @@ const CHARACTERS = {
   gestora: `${SRC}/women/Suit.glb`,
   secretaria: `${SRC}/women/Formal.glb`,
   analista: `${SRC}/men/Casual.glb`,
-  tecnico: `${SRC}/men/Worker.glb`,
+  tecnico: `${SRC}/women/Casual.glb`, // tecnica de referencia (assistente social ou psicologa)
+  comercial: `${SRC}/men/BusinessMan.glb`,
 };
 
 // Roupas nas cores da marca (nome do material -> cor sRGB). Pele e cabelo ficam como estao.
@@ -26,7 +27,10 @@ const PALETTES = {
   gestora: { Black: 0x2f6fae, White: 0xf2f7fb, Brown: 0x16314f },
   secretaria: { LimeGreen: 0x3aa7dc, Brown: 0x16314f }, // "Red" e o cabelo ruivo
   analista: { White: 0x5bc2f0, Red_Dark: 0x2a4f78, LightBlue: 0x16314f, LightBrown: 0x2a4f78 },
-  tecnico: { Grey: 0x2f6fae, Black: 0x1f4f80, Brown2: 0x2a4f78 },
+  // blusa azul bem claro, calca marinho; cabelo castanho escuro para nao confundir com a Gestora
+  tecnico: { White: 0xcfe3f1, Orange: 0x2a4f78, Grey: 0x16314f, Hair_Blond: 0x3b2418 },
+  // terno grafite azulado, gravata no ciano da marca
+  comercial: { Suit: 0x3a4d63, Tie: 0x5bc2f0, White: 0xf2f7fb, Black: 0x16314f },
 };
 
 // animacoes usadas pelo jogo
