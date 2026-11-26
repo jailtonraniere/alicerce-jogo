@@ -1,8 +1,11 @@
 # Alicerce Run
 
-Jogo web (endless runner) de ativação de marca da **Alicerce**, hub de tecnologia para gestão pública. Pensado para eventos do setor público: o visitante abre por QR code, corre coletando dados e conectando municípios ao mapa do estado, e pode entrar no ranking do evento deixando um contato. Roda no navegador, sem instalar.
+Jogo web em 3D (corrida infinita) de ativação de marca da **Alicerce**, hub de tecnologia para gestão pública. Pensado para eventos do setor público e para o celular: o visitante abre por QR code, corre coletando dados e conectando municípios ao mapa do estado, e entra no ranking do evento só com o nome. Roda no navegador, sem instalar (e pode ser instalado como app).
 
-Feito com Vite + TypeScript + Phaser 3. Ranking e leads no Supabase. Deploy na Vercel. Identidade visual marinho/ciano (Saira + IBM Plex Sans).
+Feito com Vite + TypeScript + Three.js. Ranking no Supabase. Publicado no GitHub Pages. Identidade visual marinho/ciano (Saira + IBM Plex Sans).
+
+- Jogo publicado: https://jailtonraniere.github.io/alicerce-jogo/
+- Roteiro de teste no celular: [docs/roteiro-teste-celular.md](docs/roteiro-teste-celular.md)
 
 ## Rodar localmente
 
@@ -11,26 +14,13 @@ npm install
 npm run dev
 ```
 
-Abra o endereço que o Vite mostrar (porta 5173 por padrão). O jogo funciona sem backend: nesse modo o ranking fica salvo no navegador (localStorage) e nenhum lead é gravado.
+Abra o endereço que o Vite mostrar (porta 5173). Sem as variáveis do Supabase, o ranking fica salvo só no aparelho. Para testar num celular na mesma rede, use o endereço "Network" que o Vite mostra.
 
-## Protótipo 3D (em desenvolvimento)
+Parâmetros de teste na URL:
 
-A versão em produção continua sendo a 2D (Phaser). O protótipo 3D (Three.js) usa a mesma lógica, o mesmo `TUNING` e as mesmas telas, e abre com um parâmetro na URL:
-
-- `http://localhost:5173/?3d` abre o jogo em 3D.
-- `http://localhost:5173/?3d&debug` mostra também fps, draw calls e nível de qualidade no canto da tela.
-- `&imune` (junto com `debug`) deixa o jogador imune a obstáculos, para avaliar cenário e efeitos.
-- `&q=alto`, `&q=medio` ou `&q=baixo` fixa o nível de qualidade.
-
-Personagens 3D: os 4 personagens são modelos da Quaternius (pacotes Ultimate Modular Men e Ultimate Modular Women, licença CC0), obtidos pelo Poly Pizza. Os originais ficam em `assets-src/quaternius/` e os arquivos do jogo em `public/models/`. Para regerar (mantém só as animações usadas, une cada personagem numa malha só e compacta): `node tools/build-characters.mjs`. As cores das roupas ficam nesse mesmo script (gravadas nos vértices); depois de mudar, rode-o de novo. Cada personagem só é baixado quando é escolhido; até carregar, aparece a cápsula provisória.
-
-Tela de início no 3D: a logo da Alicerce aparece em metal escovado (extrudada da logo vetorizada em `public/logo/`) e cada personagem escolhido aparece em 3D, acenando ao ser selecionado, com o cenário rodando ao fundo. Se algo não carregar, a tela mostra a logo e o emoji de sempre.
-
-Áudio no 3D: trilha e efeitos são sintetizados em tempo real (Web Audio, `src/engine3d/audio.ts`), sem arquivos de som nem licenças de terceiros. A trilha ganha camadas conforme a velocidade; no modo 2 jogadores, o som de cada um sai de um lado. O botão "Som" da tela de início liga e desliga tudo.
-
-Qualidade automática: na primeira partida o jogo começa no nível médio, tenta o alto se o aparelho tiver folga e desce se ficar abaixo de 45 fps. O nível que funcionou fica salvo no aparelho. O alto usa antisserrilhado e mais resolução; o baixo desliga o brilho (bloom).
-
-Para testar num celular na mesma rede, use o endereço "Network" que o Vite mostra ao rodar `npm run dev`, com `?3d&debug` no final. Cada motor é baixado só quando é usado, e se o aparelho não tiver WebGL o jogo cai para o 2D.
+- `?debug` mostra fps, tempo de CPU por quadro, draw calls, resolução interna e nível de qualidade no canto da tela.
+- `?debug&imune` deixa o jogador imune a obstáculos, para avaliar cenário e efeitos.
+- `?q=alto`, `?q=medio` ou `?q=baixo` fixa o nível de qualidade.
 
 ## Build e preview
 
@@ -39,12 +29,23 @@ npm run build     # checa tipos e gera dist/
 npm run preview   # serve o build local
 ```
 
+## O que o jogo tem
+
+- **Tela de início:** logo da Alicerce em metal escovado (extrudada da logo vetorizada em `public/logo/`), personagem escolhido em 3D acenando, cenário rodando ao fundo, botão "?" com as instruções e botão "Instalar no celular".
+- **Como jogar:** na primeira partida do aparelho aparece um cartão com os gestos (deslizar para os lados, para cima e para baixo), o que coletar e do que desviar.
+- **Partida:** pista de circuito com brilho (bloom), holograma do mapa do estado que acende a cada município, itens e obstáculos modelados em código, partículas, efeitos de power-up e câmera de entrada.
+- **Pausa:** botão no canto, tecla Esc, e pausa automática ao trocar de app, bloquear a tela ou deitar o celular. Ao continuar, contagem 3, 2, 1.
+- **Fim:** título conforme o resultado, recorde pessoal, ranking do evento só com o nome (lembrado no aparelho) e a sua posição em destaque.
+- **Personagens 3D:** Gestora, Analista de dados, Técnico e Secretária (modelos da Quaternius, CC0). Os originais ficam em `assets-src/quaternius/` e os arquivos do jogo em `public/models/`. Para regerar (só as animações usadas, uma malha por personagem, cores da marca nos vértices): `node tools/build-characters.mjs`. As cores das roupas ficam nesse script.
+- **Áudio:** trilha e efeitos sintetizados em tempo real (Web Audio, `src/engine3d/audio.ts`), sem arquivos de som. O botão "Som" liga e desliga.
+- **Celular:** instalável (abre em tela cheia e em pé), tela cheia ao jogar no Android, tela sempre acesa na partida, vibração curta na batida e ao conectar município (Android), aviso para girar o celular deitado. O modo 2 jogadores aparece só em tablet e computador.
+- **Qualidade automática:** começa no nível médio, tenta o alto se o aparelho tiver folga e desce se ficar abaixo de 45 fps. O nível que funcionou fica salvo no aparelho.
+- **Sem 3D:** em aparelho sem WebGL, aparece um aviso claro.
+
 ## Desempenho e cache offline
 
-- **Cache offline:** no build de produção, um service worker (`public/sw.js`) guarda no aparelho tudo o que o jogo usou (página, motor, fontes, logo, personagens). Nas próximas visitas o jogo abre rápido e funciona mesmo sem rede. A página sempre busca a versão nova primeiro, então um novo deploy chega na próxima abertura com internet.
-- **Cabeçalhos de cache:** o `vercel.json` marca os arquivos com hash (`/assets/`) como imutáveis e os personagens (`/models/`) com cache de um dia.
-- **Medir no aparelho:** abra com `?3d&debug` para ver fps, tempo de CPU por quadro, draw calls, resolução interna e nível de qualidade no canto da tela.
-- **Referência medida (PC com GPU integrada, Chrome):** 1 jogador a 60 fps e cerca de 40 draw calls; 2 jogadores a 56 a 60 fps e cerca de 65 draw calls. Com a CPU desacelerada 4 vezes (simulando um celular intermediário), 1 jogador fica entre 52 e 60 fps e 2 jogadores entre 37 e 52 fps. Falta medir em celulares reais.
+- **Cache offline:** no build de produção, um service worker (`public/sw.js`) guarda no aparelho tudo o que o jogo usou. Nas próximas visitas o jogo abre rápido e funciona mesmo sem rede. A página sempre busca a versão nova primeiro.
+- **Referência medida (PC com GPU integrada, Chrome):** 1 jogador a 60 fps e cerca de 40 draw calls; 2 jogadores a 56 a 60 fps. Com a CPU desacelerada 4 vezes (simulando um celular intermediário), 1 jogador fica entre 52 e 60 fps. Falta medir em celulares reais (veja o roteiro).
 
 ## Configurar o Supabase (ranking do evento)
 
@@ -62,81 +63,63 @@ Moderação: o arquivo da migração traz, no final, os comandos para ver o rank
 
 ## Publicar no GitHub Pages (configurado)
 
-O workflow `.github/workflows/pages.yml` gera o build e publica a cada envio ao ramo `main`. Endereço: `https://jailtonraniere.github.io/alicerce-jogo/` (versão 3D: `https://jailtonraniere.github.io/alicerce-jogo/?3d`).
+O workflow `.github/workflows/pages.yml` gera o build e publica a cada envio ao ramo `main`, em `https://jailtonraniere.github.io/alicerce-jogo/`. Para rodar de novo sem commit: **Actions > Publicar no GitHub Pages > Run workflow**. Depois de mudar as variáveis do Supabase, rode o workflow de novo: elas entram no momento do build.
 
-Uma vez só, no GitHub:
-
-1. **Settings > Pages > Build and deployment > Source: GitHub Actions.**
-2. Para ranking e leads no Supabase (opcional): **Settings > Secrets and variables > Actions**. Em *Variables*, crie `VITE_SUPABASE_URL` e `VITE_EVENTO`; em *Secrets*, crie `VITE_SUPABASE_ANON_KEY` (sempre a anon key). Sem elas, o ranking fica salvo só no aparelho.
-3. Em **Actions > Publicar no GitHub Pages > Run workflow**, rode a primeira publicação (ou envie qualquer commit ao `main`).
-
-Depois de mudar as variáveis do Supabase, rode o workflow de novo: elas entram no momento do build.
-
-## Deploy na Vercel (alternativa)
-
-1. Suba o repositório e importe na Vercel (framework Vite é detectado; `vercel.json` já define build e saída).
-2. Em Settings > Environment Variables, adicione `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` e `VITE_EVENTO`.
-3. Deploy. Gere um QR code apontando para a URL e leve ao estande.
+Alternativa: a Vercel também funciona (`vercel.json` já define build, saída e cache). Importe o repositório e cadastre as mesmas três variáveis em Settings > Environment Variables.
 
 ## Como jogar
 
-- **1 jogador:** deslize o dedo (ou use as setas / A D W S). Esquerda e direita trocam de pista, cima pula, baixo abaixa. Há botões na tela no celular.
-- **2 jogadores:** tela dividida. Jogador 1 usa A D W S; jogador 2 usa as setas. No celular, cada um controla a sua metade por toque. Vence quem fizer mais pontos.
-- **Coletar:** blocos de "dado" e "indicador" viram pontos e municípios conectados; acertos em sequência aumentam o combo.
+- **Celular:** deslize o dedo. Para os lados troca de pista, para cima pula, para baixo abaixa. Também há botões na tela.
+- **Computador:** setas ou A D W S. Esc pausa.
+- **2 jogadores (tablet e computador):** tela dividida. Jogador 1 usa A D W S; jogador 2 usa as setas. No tablet, cada um desliza na sua metade. Vence quem fizer mais pontos.
+- **Coletar:** dados e indicadores (em ciano) viram pontos e municípios conectados. Coletar em sequência aumenta o combo; deixar um passar zera a sequência.
 - **Desviar:** obstáculos em laranja (planilha solta, dado desatualizado, recurso parado). Pule os baixos, abaixe nos altos, troque de pista nos blocos.
-- **Power-ups:** 🛡 visão consolidada (escudo), 🧲 engenharia de dados (ímã), 🚀 recurso que flui (turbo).
+- **Power-ups:** escudo, ímã e turbo.
 
 ## Estrutura
 
 ```
 src/
-  main.ts            orquestra as telas (DOM) e carrega o motor (2D ou 3D)
-  engine.ts          contrato comum dos motores
-  engine2d.ts        motor 2D (Phaser), versão em produção
-  engine3d/          motor 3D (Three.js): cenário, holograma do mapa, itens, partículas,
-                     brilho (bloom), níveis de qualidade, placar e controles
-  sim/               lógica do jogo sem desenho, usada pelo 3D (porta do Runner.ts)
-  config.ts          constantes, personagens, balanceamento, barramento de eventos
+  main.ts            telas em HTML (início, como jogar, pausa, fim, ranking) e recursos de celular
+  engine.ts          contrato entre as telas e o motor
+  engine3d/          motor 3D (Three.js): cenário, holograma do mapa, personagens, itens,
+                     partículas, brilho, áudio, qualidade automática, placar, controles e pausa
+  sim/               lógica do jogo sem desenho (pistas, colisões, pontuação, power-ups)
+  config.ts          constantes, personagens, balanceamento (TUNING), barramento de eventos
   theme.ts           tokens de cor e fontes da marca
-  supabase.ts        ranking e leads (com fallback local)
-  types.ts           tipos compartilhados
-  style.css          estilo das telas de inicio e fim
-  scenes/GameScene.ts  gameplay (1 e 2 jogadores)
-  objects/Runner.ts    jogador, coleta, obstaculos, power-ups, pontuacao
-  util/stateMap.ts     mapa do estado que conecta ao fundo
-supabase/migrations/   SQL do ranking e leads
-public/                favicon, logos da marca (SVG) e personagens 3D (models/)
-assets-src/            arquivos originais dos personagens 3D
-tools/                 scripts para preparar e inspecionar os modelos 3D
-public/sw.js           service worker (cache offline, só no build de produção)
+  supabase.ts        ranking (Supabase, com modo local e reenvio sem rede)
+  audioUnlock.ts     libera o áudio no toque de JOGAR (necessário no iPhone)
+  style.css          estilo das telas
+supabase/migrations/ SQL do ranking
+public/              favicon, logos (SVG), ícones do app, manifesto, personagens (models/), sw.js
+assets-src/          arquivos originais dos personagens 3D
+tools/               scripts para preparar e inspecionar os modelos 3D
+docs/                roteiro de teste no celular
 ```
 
 ## Personalização rápida
 
 - **Cores e fontes:** `src/theme.ts` e `src/style.css`.
-- **Dificuldade, pontos, power-ups:** `src/config.ts` (objeto `TUNING`).
-- **Personagens:** `src/config.ts` (lista `CHARACTERS`).
-- **Logo:** a logo oficial em SVG está em `public/logo/` (veja `LEIA-ME.txt`) e aparece na tela de início e no favicon.
-- **Recorte SUAS Fácil:** para um evento de assistência social, ajuste textos e personagens; a mecânica de "conectar municípios" já conversa com o discurso do SUAS Fácil.
+- **Dificuldade, pontos, power-ups:** `src/config.ts` (objeto `TUNING`). Se mudar `pointsPerMunicipio`, ajuste a regra `ranking_municipios_coerentes` na migração.
+- **Personagens:** `src/config.ts` (lista `CHARACTERS`) e `tools/build-characters.mjs`.
+- **Logo:** `public/logo/` (veja `LEIA-ME.txt`).
 
 ## Observações
 
-- No modo 2 jogadores, a pontuação enviada ao ranking é a maior das duas (o nome informado é de quem está no dispositivo). Ajuste em `src/main.ts` se quiser gravar as duas.
 - Linguagem e tom seguem o padrão institucional da Alicerce: sóbrio, sem travessões, sem gamificar beneficiários nem trivializar recurso público.
 - Acessibilidade: alto contraste, botões grandes, `prefers-reduced-motion` respeitado, opção de som.
+- O antigo jogo 2D (Phaser) foi removido em novembro de 2026 e continua no histórico do Git.
 
 ## Checklist antes do evento
 
 - [x] Logos oficiais em `public/logo/` e símbolo trocado na tela de início.
 - [ ] Supabase configurado e migração aplicada; `VITE_EVENTO` com o nome do evento.
-- [ ] Testado em um Android e um iPhone reais (carregamento e controles por toque).
-- [ ] Modo 3D: aberto com `?3d&debug` num Android intermediário e num iPhone, anotando fps e nível de qualidade (1 e 2 jogadores).
-- [ ] Decidido se o QR code abre a versão 2D (padrão) ou a 3D (`?3d`).
+- [ ] Roteiro de teste feito num Android intermediário e num iPhone ([docs/roteiro-teste-celular.md](docs/roteiro-teste-celular.md)).
 - [ ] Nos aparelhos do estande: jogo aberto uma vez com Wi-Fi, para ficar guardado no cache offline.
-- [ ] QR code gerado apontando para a URL da Vercel.
+- [ ] QR code gerado apontando para o endereço publicado.
 - [ ] Tela/telão do estande com o ranking aberto (a tela de fim mostra o ranking do evento).
 
 ## Créditos
 
-- Personagens 3D (modo 3D): [Quaternius](https://quaternius.com), pacotes Ultimate Modular Men e Ultimate Modular Women, licença CC0 1.0. Arquivos obtidos pelo [Poly Pizza](https://poly.pizza/u/Quaternius).
-- Motor 3D: [Three.js](https://threejs.org) (MIT). Motor 2D: [Phaser](https://phaser.io) (MIT).
+- Personagens 3D: [Quaternius](https://quaternius.com), pacotes Ultimate Modular Men e Ultimate Modular Women, licença CC0 1.0. Arquivos obtidos pelo [Poly Pizza](https://poly.pizza/u/Quaternius).
+- Motor 3D: [Three.js](https://threejs.org) (MIT).
