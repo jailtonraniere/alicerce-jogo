@@ -47,19 +47,18 @@ npm run preview   # serve o build local
 - **Cache offline:** no build de produção, um service worker (`public/sw.js`) guarda no aparelho tudo o que o jogo usou. Nas próximas visitas o jogo abre rápido e funciona mesmo sem rede. A página sempre busca a versão nova primeiro.
 - **Referência medida (PC com GPU integrada, Chrome):** 1 jogador a 60 fps e cerca de 40 draw calls; 2 jogadores a 56 a 60 fps. Com a CPU desacelerada 4 vezes (simulando um celular intermediário), 1 jogador fica entre 52 e 60 fps. Falta medir em celulares reais (veja o roteiro).
 
-## Configurar o Supabase (ranking do evento)
+## Supabase (ranking do evento)
 
-Por enquanto o ranking guarda **só o nome** (sem contato, órgão ou cargo). Sem Supabase, o jogo funciona e o ranking fica salvo só no aparelho.
+O ranking está ligado ao projeto Supabase `cbznaalznrdozafaenxw` e guarda **só o nome** (sem contato, órgão ou cargo).
 
-1. Crie um projeto no Supabase (ou reaproveite um existente).
-2. No **SQL Editor**, rode o arquivo `supabase/migrations/20261126000001_ranking_so_nome.sql` inteiro. Ele funciona num projeto novo e também em cima da migração anterior. Cria a tabela `ranking`, as regras de validação, as permissões e a view pública `v_ranking_top`.
-3. Em **Project Settings > API**, copie a **Project URL** e a chave **anon public**. Nunca use a `service_role` no jogo.
-4. No GitHub, em **Settings > Secrets and variables > Actions**: Variables `VITE_SUPABASE_URL` (a URL) e `VITE_EVENTO` (ex.: `congemas-2026`); Secret `VITE_SUPABASE_ANON_KEY` (a anon key). Depois rode o workflow de publicação de novo.
-5. Para testar no computador, copie `.env.example` para `.env.local` (fica fora do Git) e preencha os mesmos três valores.
+- **Configuração de produção:** `.env.production` (versionado) com a URL, a chave **publicável** (`sb_publishable_…`, pública por natureza, vai dentro do jogo) e o evento padrão `demonstracao`. Nunca coloque ali a chave secreta (`sb_secret_…` ou `service_role`).
+- **Trocar o nome do evento** sem mexer no código: no GitHub, crie a Variable `VITE_EVENTO` (Settings > Secrets and variables > Actions) e rode o workflow de publicação. Ela tem prioridade sobre o `.env.production`.
+- **Testes locais:** `.env.local` (fora do Git) com os mesmos valores e o evento `teste-conexao`, para não misturar com o ranking real.
+- **Banco:** a estrutura vem de `supabase/migrations/20261126000001_ranking_so_nome.sql` (já aplicada). Para um projeto novo, rode esse arquivo inteiro no SQL Editor.
 
 Como a segurança funciona: o visitante só consegue **gravar** nome, pontos, municípios, personagem, evento e duração, e só **ler** as colunas públicas do ranking. O banco recusa pontuação incoerente (municípios que não batem com os pontos, ou pontos acima do máximo possível para o tempo jogado). Se a rede cair na hora de salvar, a pontuação fica guardada no aparelho e sobe quando a conexão voltar.
 
-Moderação: o arquivo da migração traz, no final, os comandos para ver o ranking de um evento, remover uma linha indevida e zerar um evento.
+Moderação (no SQL Editor): o arquivo da migração traz, no final, os comandos para ver o ranking de um evento, remover uma linha indevida e zerar um evento. Para apagar os testes de conexão: `delete from public.ranking where evento = 'teste-conexao';`
 
 ## Publicar no GitHub Pages (configurado)
 
@@ -113,7 +112,8 @@ docs/                roteiro de teste no celular
 ## Checklist antes do evento
 
 - [x] Logos oficiais em `public/logo/` e símbolo trocado na tela de início.
-- [ ] Supabase configurado e migração aplicada; `VITE_EVENTO` com o nome do evento.
+- [x] Supabase configurado e migração aplicada.
+- [ ] `VITE_EVENTO` com o nome do evento (Variable no GitHub) e workflow rodado de novo.
 - [ ] Roteiro de teste feito num Android intermediário e num iPhone ([docs/roteiro-teste-celular.md](docs/roteiro-teste-celular.md)).
 - [ ] Nos aparelhos do estande: jogo aberto uma vez com Wi-Fi, para ficar guardado no cache offline.
 - [ ] QR code gerado apontando para o endereço publicado.

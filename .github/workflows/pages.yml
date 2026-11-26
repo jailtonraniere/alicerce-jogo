@@ -1,12 +1,12 @@
 # Publica o Alicerce Run no GitHub Pages a cada envio ao ramo main.
 # Endereco: https://<usuario>.github.io/<repositorio>/ (versao 3D: acrescente ?3d)
 #
-# Antes da primeira execucao, no GitHub:
-#  1. Settings > Pages > Build and deployment > Source: GitHub Actions
-#  2. (opcional, para ranking e leads no Supabase) Settings > Secrets and variables > Actions:
-#     - Variables: VITE_SUPABASE_URL e VITE_EVENTO
-#     - Secrets:   VITE_SUPABASE_ANON_KEY (sempre a anon key, nunca a service role)
-#     Sem essas variaveis o jogo funciona com ranking local no aparelho.
+# Antes da primeira execucao, no GitHub: Settings > Pages > Source: GitHub Actions.
+#
+# Supabase: URL, chave publica e evento padrao ficam no .env.production. Para
+# sobrescrever sem mexer no codigo (ex.: nome do evento), crie em Settings >
+# Secrets and variables > Actions as Variables VITE_EVENTO / VITE_SUPABASE_URL
+# ou o Secret VITE_SUPABASE_ANON_KEY. So as preenchidas sao repassadas ao build.
 name: Publicar no GitHub Pages
 
 on:
@@ -37,11 +37,17 @@ jobs:
       - run: npm ci
 
       - name: Build (checa tipos e gera dist/)
-        run: npm run build
+        # variavel vazia do ambiente teria prioridade sobre o .env.production;
+        # por isso so as preenchidas no GitHub sao exportadas
+        run: |
+          if [ -n "$GH_SUPABASE_URL" ]; then export VITE_SUPABASE_URL="$GH_SUPABASE_URL"; fi
+          if [ -n "$GH_SUPABASE_KEY" ]; then export VITE_SUPABASE_ANON_KEY="$GH_SUPABASE_KEY"; fi
+          if [ -n "$GH_EVENTO" ]; then export VITE_EVENTO="$GH_EVENTO"; fi
+          npm run build
         env:
-          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          VITE_EVENTO: ${{ vars.VITE_EVENTO || 'demonstracao' }}
+          GH_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          GH_SUPABASE_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          GH_EVENTO: ${{ vars.VITE_EVENTO }}
 
       - uses: actions/upload-pages-artifact@v5
         with:
