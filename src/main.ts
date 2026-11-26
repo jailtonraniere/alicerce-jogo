@@ -25,31 +25,22 @@ const gameoverScreen = qs<HTMLElement>("#gameover-screen");
 const touchControls = qs<HTMLElement>("#touch-controls");
 const toastEl = qs<HTMLElement>("#toast");
 
-// ---- Motor do jogo ----
-// Padrao: motor 2D (Phaser), a versao em producao. Com ?3d na URL, carrega o
-// prototipo 3D (Three.js). Cada motor e baixado sob demanda, entao quem joga
-// uma versao nao baixa a outra. Se o 3D falhar (sem WebGL), cai para o 2D.
+// ---- Motor do jogo (3D, Three.js) ----
+// Baixado sob demanda, depois que a tela de inicio ja apareceu. Sem WebGL, o
+// aparelho nao roda o jogo: mostra um aviso claro em vez de uma tela vazia.
 const gameRoot = qs<HTMLElement>("#game-root");
-const want3d = new URLSearchParams(location.search).has("3d");
-const load2d = () => import("./engine2d").then((m) => m.createEngine(gameRoot));
-if (want3d) {
-  // No 3D, a tela de inicio fica transparente e o motor desenha logo e personagens por tras.
-  document.body.classList.add("is-3d");
-  // Credito dos personagens 3D (Quaternius, CC0), discreto no rodape da tela de inicio.
-  const credits = document.createElement("p");
-  credits.className = "credits";
-  credits.textContent = "Personagens 3D: Quaternius (CC0)";
-  startScreen.appendChild(credits);
-}
-const enginePromise: Promise<GameEngine> = want3d
-  ? import("./engine3d")
-      .then((m) => m.createEngine(gameRoot))
-      .catch((err) => {
-        console.warn("Motor 3D indisponivel, usando o 2D.", err);
-        gameRoot.replaceChildren();
-        return load2d();
-      })
-  : load2d();
+const enginePromise: Promise<GameEngine> = import("./engine3d")
+  .then((m) => m.createEngine(gameRoot))
+  .catch((err) => {
+    console.warn("Motor 3D indisponivel neste aparelho.", err);
+    gameRoot.replaceChildren();
+    qs<HTMLElement>("#no-webgl").classList.remove("is-hidden");
+    startScreen.classList.add("is-hidden");
+    throw err;
+  });
+enginePromise.catch(() => {
+  /* aviso ja exibido */
+});
 
 let lastResult: GameResult | null = null;
 let menuVisible = true;
@@ -135,8 +126,8 @@ function buildConfig(): GameConfig {
 function startGame() {
   const cfg = buildConfig();
   menuVisible = false;
-  if (want3d && cfg.sound) unlockAudio(); // precisa acontecer dentro do clique
-  if (want3d && !startScreen.classList.contains("is-hidden")) {
+  if (cfg.sound) unlockAudio(); // precisa acontecer dentro do clique
+  if (!startScreen.classList.contains("is-hidden")) {
     // 3D: a tela de inicio esmaece enquanto a camera entra na pista
     startScreen.classList.add("is-leaving");
     window.setTimeout(() => {

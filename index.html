@@ -12,7 +12,7 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>Alicerce Run</title>
   </head>
-  <body>
+  <body class="is-3d">
     <div id="stage">
       <div id="game-root"></div>
 
@@ -57,6 +57,16 @@
           <span class="privacy">🔒 Jogue sem cadastro</span>
         </div>
         <p class="hint" id="controls-hint"></p>
+        <p class="credits">Personagens 3D: Quaternius (CC0)</p>
+      </section>
+
+      <!-- Aparelho sem suporte a 3D -->
+      <section id="no-webgl" class="overlay is-hidden" role="alert">
+        <div class="brand">
+          <img src="/logo/alicerce-branca.svg" alt="Alicerce" width="139" height="32" />
+        </div>
+        <h2>Este aparelho não roda o jogo em 3D</h2>
+        <p class="tagline">Tente em outro celular ou atualize o navegador. Se estiver no evento, fale com a equipe da Alicerce no estande.</p>
       </section>
 
       <!-- Controles de toque (1 jogador) -->

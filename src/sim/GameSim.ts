@@ -3,7 +3,7 @@ import { RunnerSim } from "./RunnerSim";
 import type { GameConfig, GameResult } from "../types";
 
 // Partida completa sem desenho: contagem, velocidade base, 1 ou 2 jogadores e
-// resultado. Mesmo comportamento da GameScene 2D (contagem de 4 passos de 700 ms,
+// resultado (contagem de 4 passos de 700 ms,
 // fim 500 ms depois de todos colidirem).
 
 const COUNT_STEP_MS = 700;

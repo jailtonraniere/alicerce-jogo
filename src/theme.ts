@@ -1,5 +1,5 @@
 // Identidade visual vigente da Alicerce (marinho + ciano), a mesma dos materiais do SUAS Facil.
-// Hex para CSS e numeros 0x para o Phaser.
+// Hex para CSS e numeros 0x para o Three.js.
 
 export const COLORS = {
   bg0: "#10365A",

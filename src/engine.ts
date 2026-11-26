@@ -7,7 +7,7 @@ export type MenuState = {
 };
 
 // Contrato comum dos motores de jogo. O main.ts so conhece esta interface;
-// o motor escolhido e carregado sob demanda (2D com Phaser ou 3D com Three.js).
+// o motor 3D (Three.js) e carregado sob demanda.
 // O fim de partida e avisado pelo barramento: bus.emit("gameover", GameResult).
 export interface GameEngine {
   start(cfg: GameConfig): void;

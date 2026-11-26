@@ -1,6 +1,6 @@
 import { TUNING, GAME_HEIGHT } from "../config";
 
-// Logica de um jogador, sem desenho. Porta fiel de objects/Runner.ts:
+// Logica de um jogador, sem desenho (veio do Runner.ts do antigo jogo 2D):
 // mesmas probabilidades de spawn, timers, colisoes, combo e ima, tudo em px
 // e px/s como no jogo 2D, lendo o mesmo TUNING. O motor 3D so converte para o
 // mundo 3D na hora de desenhar, entao a dificuldade e o tempo de reacao nao mudam.
