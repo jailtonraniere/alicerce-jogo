@@ -27,17 +27,57 @@ const touchControls = qs<HTMLElement>("#touch-controls");
 const pauseBtn = qs<HTMLButtonElement>("#pause-btn");
 const toastEl = qs<HTMLElement>("#toast");
 
+// ---- Abertura ----
+// A tela de inicio fica escondida ate o motor desenhar a logo em metal e o
+// personagem (aviso "menuready"), para nao aparecer antes a versao plana. A barra
+// anda por etapas reais. Com rede muito lenta, abre assim mesmo depois de um tempo.
+const LOADING_MAX_MS = 15000;
+const loadingEl = qs<HTMLElement>("#loading");
+const loadingBar = qs<HTMLElement>("#loading-bar");
+let loadProgress = 0.08;
+
+function setLoadProgress(p: number) {
+  if (p <= loadProgress) return;
+  loadProgress = Math.min(1, p);
+  loadingBar.style.transform = `scaleX(${loadProgress})`;
+}
+
+function finishLoading() {
+  if (!document.body.classList.contains("is-loading")) return;
+  setLoadProgress(1);
+  document.body.classList.remove("is-loading");
+  window.setTimeout(() => loadingEl.classList.add("is-hidden"), 600);
+}
+
+bus.on("menuload", () => setLoadProgress(loadProgress + 0.15)); // logo ou personagem
+bus.on("menuready", finishLoading);
+window.setTimeout(finishLoading, LOADING_MAX_MS);
+
+// O personagem inicial e o maior arquivo da abertura: comeca a baixar ja, junto
+// com o motor (o carregador do 3D reaproveita a copia do cache do navegador).
+void fetch(`${import.meta.env.BASE_URL}models/${CHARACTERS[0].id}.glb`)
+  .then((r) => r.arrayBuffer())
+  .catch(() => {
+    /* o motor tenta de novo */
+  });
+
 // ---- Motor do jogo (3D, Three.js) ----
-// Baixado sob demanda, depois que a tela de inicio ja apareceu. Sem WebGL, o
-// aparelho nao roda o jogo: mostra um aviso claro em vez de uma tela vazia.
+// Baixado sob demanda, logo na abertura. Sem WebGL, o aparelho nao roda o jogo:
+// mostra um aviso claro em vez de uma tela vazia.
 const gameRoot = qs<HTMLElement>("#game-root");
 const enginePromise: Promise<GameEngine> = import("./engine3d")
-  .then((m) => m.createEngine(gameRoot))
+  .then((m) => {
+    setLoadProgress(0.5);
+    const engine = m.createEngine(gameRoot);
+    setLoadProgress(0.65);
+    return engine;
+  })
   .catch((err) => {
     console.warn("Motor 3D indisponivel neste aparelho.", err);
     gameRoot.replaceChildren();
     qs<HTMLElement>("#no-webgl").classList.remove("is-hidden");
     startScreen.classList.add("is-hidden");
+    finishLoading();
     throw err;
   });
 enginePromise.catch(() => {

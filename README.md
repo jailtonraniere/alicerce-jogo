@@ -31,6 +31,7 @@ npm run preview   # serve o build local
 
 ## O que o jogo tem
 
+- **Abertura:** tela de carregamento com a logo e uma barra de progresso. A tela de início só aparece quando a logo em metal e o personagem 3D já estão desenhados, para não mostrar antes uma versão plana. Com rede muito lenta, abre depois de 15 segundos com o que houver.
 - **Tela de início:** logo da Alicerce em metal escovado (extrudada da logo vetorizada em `public/logo/`), personagem escolhido em 3D acenando, cenário rodando ao fundo, botão "?" com as instruções e botão "Instalar no celular".
 - **Como jogar:** na primeira partida do aparelho aparece um cartão com os gestos (deslizar para os lados, para cima e para baixo), o que coletar e do que desviar.
 - **Partida:** pista de circuito com brilho (bloom), holograma do mapa do estado que acende a cada município, itens e obstáculos modelados em código, partículas, efeitos de power-up e câmera de entrada.

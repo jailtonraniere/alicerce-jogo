@@ -17,7 +17,7 @@
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <title>Alicerce Run</title>
   </head>
-  <body class="is-3d">
+  <body class="is-3d is-loading">
     <div id="stage">
       <div id="game-root"></div>
 
@@ -169,6 +169,13 @@
           </div>
         </div>
       </section>
+
+      <!-- Abertura: cobre a tela ate a cena 3D da tela de inicio ficar completa -->
+      <div id="loading" role="status" aria-label="Carregando o jogo">
+        <img src="/logo/alicerce-branca.svg" alt="" width="139" height="32" />
+        <div class="loading-track"><span id="loading-bar"></span></div>
+        <p>Carregando</p>
+      </div>
 
       <!-- Celular deitado -->
       <div id="rotate" role="alert">

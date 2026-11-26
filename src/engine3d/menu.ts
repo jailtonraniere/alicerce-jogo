@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { CharacterInstance, MODEL_HEIGHT, loadCharacter } from "./characters";
+import { bus } from "../config";
 import type { MenuState } from "../engine";
 
 // Cena da tela de inicio, desenhada por cima do cenario (escurecido) e por baixo
@@ -116,6 +117,11 @@ export class Menu {
   private time = 0;
   private w = 1;
   private h = 1;
+  // Abertura: avisa a pagina ("menuready") quando a logo e o primeiro personagem
+  // estao resolvidos (em 3D ou, se falharem, com o provisorio da pagina) e ja desenhados.
+  private logoSettled = false;
+  private charSettled = false;
+  private readyStage: "esperando" | "desenhando" | "avisado" = "esperando";
 
   constructor(
     renderer: THREE.WebGLRenderer,
@@ -170,7 +176,20 @@ export class Menu {
       document.body.classList.add("logo3d-ready");
     } catch (err) {
       console.warn("Logo 3D indisponivel, mantendo a logo da pagina.", err);
+    } finally {
+      this.settle("logo");
     }
+  }
+
+  private settle(part: "logo" | "char") {
+    if (part === "logo") {
+      if (this.logoSettled) return;
+      this.logoSettled = true;
+    } else {
+      if (this.charSettled) return;
+      this.charSettled = true;
+    }
+    bus.emit("menuload");
   }
 
   show(state: MenuState) {
@@ -188,13 +207,18 @@ export class Menu {
       const token = ++slot.token;
       if (!want) return;
       void loadCharacter(want).then((asset) => {
-        if (!asset || token !== slot.token || !this.visible) return;
+        if (token !== slot.token || !this.visible) return; // ha uma escolha mais nova a caminho
+        if (!asset) {
+          if (i === 0) this.settle("char"); // segue com o provisorio da pagina
+          return;
+        }
         const inst = new CharacterInstance(asset);
         inst.root.rotation.y = Math.PI; // de frente para a tela
         slot.inst = inst;
         this.scene.add(inst.root);
         inst.greet();
         document.body.classList.add("chars3d-ready");
+        if (i === 0) this.settle("char");
       });
     });
   }
@@ -235,6 +259,15 @@ export class Menu {
   update(dtMs: number) {
     if (!this.visible) return;
     this.time += dtMs;
+    // O quadro deste update ja traz tudo; no seguinte ele ja foi para a tela.
+    if (this.readyStage === "esperando" && this.logoSettled && this.charSettled) {
+      this.readyStage = "desenhando";
+      this.logoT = 0; // a entrada da logo acontece com a tela ja aberta
+      this.slots[0].inst?.greet();
+    } else if (this.readyStage === "desenhando") {
+      this.readyStage = "avisado";
+      bus.emit("menuready");
+    }
     const rootRect = this.root.getBoundingClientRect();
     const sway = this.reducedMotion ? 0 : 1;
 

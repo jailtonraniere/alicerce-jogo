@@ -538,6 +538,58 @@ body {
   margin-bottom: 18px;
 }
 
+/* ---- Abertura: a tela de inicio so aparece com a cena 3D completa (logo em metal e
+   personagem), para nao mostrar antes a versao plana ---- */
+#loading {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  background: linear-gradient(180deg, var(--bg0), var(--bg2));
+  transition: opacity 0.45s ease;
+}
+#loading img {
+  display: block;
+  height: 32px;
+  width: auto;
+}
+.loading-track {
+  width: 160px;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(91, 194, 240, 0.18);
+  overflow: hidden;
+}
+#loading-bar {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transform-origin: left center;
+  transform: scaleX(0.08);
+  transition: transform 0.4s ease;
+}
+#loading p {
+  margin: 0;
+  font-family: "Saira", sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+body:not(.is-loading) #loading {
+  opacity: 0;
+  pointer-events: none;
+}
+/* escondida, mas com o mesmo tamanho: o motor 3D mede a posicao da logo e dos personagens */
+.is-loading #start-screen {
+  opacity: 0;
+  visibility: hidden;
+}
+
 /* ---- Celular deitado: pede para girar ---- */
 #rotate {
   display: none;

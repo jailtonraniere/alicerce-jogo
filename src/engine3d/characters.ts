@@ -156,7 +156,8 @@ export class CharacterInstance {
     if (!a) return this.idle();
     a.setLoop(THREE.LoopOnce, 1);
     a.clampWhenFinished = false;
-    this.fadeTo("Wave", 0.2);
+    if (this.current === a) a.reset().play(); // ja acenando: recomeca do inicio
+    else this.fadeTo("Wave", 0.2);
     this.currentName = "Wave";
     this.greetLeftMs = a.getClip().duration * 1000 - 200;
   }
