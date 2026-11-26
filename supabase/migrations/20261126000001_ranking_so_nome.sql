@@ -50,7 +50,7 @@ alter table public.ranking add constraint ranking_pontos_range
   check (pontos between 0 and 2000000) not valid;
 
 alter table public.ranking add constraint ranking_personagem_valido
-  check (personagem in ('gestora', 'analista', 'tecnico', 'secretaria')) not valid;
+  check (personagem in ('gestora', 'analista', 'tecnico', 'secretaria', 'comercial')) not valid;
 
 -- duracao da corrida (sem a contagem inicial), ate 1 hora
 alter table public.ranking add constraint ranking_duracao_range
