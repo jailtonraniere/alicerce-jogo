@@ -9,7 +9,12 @@
     <meta name="theme-color" content="#0A2440" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Alicerce Run" />
+    <meta name="format-detection" content="telephone=no" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <title>Alicerce Run</title>
   </head>
   <body class="is-3d">
@@ -56,6 +61,7 @@
         <div class="start-foot">
           <button id="sound-toggle" class="ghost" aria-pressed="true">♫ Som: ligado</button>
           <span class="privacy">🔒 Jogue sem cadastro</span>
+          <button id="install-btn" class="ghost is-hidden">Instalar no celular</button>
         </div>
         <p class="hint" id="controls-hint"></p>
         <p class="credits">Personagens 3D: Quaternius (CC0)</p>

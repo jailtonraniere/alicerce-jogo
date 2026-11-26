@@ -10,6 +10,7 @@ import { Particles } from "./particles";
 import { buildEntity, animateEntity, entityData } from "./entities";
 import { CharacterInstance, loadCharacter } from "./characters";
 import type { GameAudio } from "./audio";
+import { vibrate } from "./haptics";
 import type { QualitySettings } from "./quality";
 
 // Uma pista 3D com o seu jogador, cenario, holograma do mapa e camera. No modo
@@ -303,6 +304,7 @@ export class Track {
         const p = this.player.position;
         this.particles.burst(p.x, p.y + 0.9, p.z - 0.4, C_AMBER, 32, 6.5, 800);
         this.audio?.crash(this.pan);
+        vibrate(140);
       }
     }
     this.sim.events.length = 0;
@@ -311,7 +313,10 @@ export class Track {
     const s = this.sim;
     if (s.jump > 0 && this.prevJump === 0) this.audio?.jump(this.pan);
     if (s.duck > 0 && this.prevDuck === 0) this.audio?.roll(this.pan);
-    if (s.municipios > this.prevMunicipios) this.audio?.municipio(this.pan);
+    if (s.municipios > this.prevMunicipios) {
+      this.audio?.municipio(this.pan);
+      vibrate(25);
+    }
     this.prevJump = s.jump;
     this.prevDuck = s.duck;
     this.prevMunicipios = s.municipios;

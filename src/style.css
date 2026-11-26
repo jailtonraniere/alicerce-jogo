@@ -205,10 +205,17 @@ body {
 }
 .start-foot {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  justify-content: center;
   align-items: center;
   gap: 8px;
   margin-top: 16px;
+}
+/* som e instalar lado a lado; o aviso de privacidade vai para a linha de baixo */
+.start-foot .privacy {
+  order: 3;
+  flex-basis: 100%;
+  text-align: center;
 }
 .privacy {
   font-size: 11px;
@@ -306,13 +313,17 @@ body {
 }
 #touch-controls button {
   pointer-events: auto;
-  width: 54px;
-  height: 54px;
+  width: 48px;
+  height: 48px;
   border-radius: 12px;
-  background: rgba(5, 16, 28, 0.55);
-  border: 1px solid var(--surface-br);
+  background: rgba(5, 16, 28, 0.35);
+  border: 1px solid rgba(91, 194, 240, 0.3);
   color: var(--accent);
-  font-size: 20px;
+  font-size: 17px;
+  opacity: 0.85;
+}
+#touch-controls button:active {
+  background: rgba(91, 194, 240, 0.25);
 }
 
 /* ---- Game over ---- */
@@ -798,4 +809,23 @@ body {
   .howto-keys:not(.is-duo) {
     display: none;
   }
+}
+
+/* ---- Celular: toque ---- */
+/* sem zoom por toque duplo nos botoes; sem menu de pressionar e segurar; sem selecionar texto do jogo */
+button {
+  touch-action: manipulation;
+}
+body {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+input {
+  -webkit-user-select: text;
+  user-select: text;
+}
+/* 2 jogadores fica so para tablet e computador */
+.is-phone .mode-toggle {
+  display: none;
 }

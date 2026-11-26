@@ -107,6 +107,72 @@ qs<HTMLButtonElement>("#sound-toggle").addEventListener("click", (e) => {
   btn.textContent = sound ? "♫ Som: ligado" : "♪ Som: desligado";
 });
 
+// ---- Celular ----
+const standalone =
+  window.matchMedia("(display-mode: fullscreen), (display-mode: standalone)").matches ||
+  (navigator as unknown as { standalone?: boolean }).standalone === true;
+const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const touchDevice = window.matchMedia("(pointer: coarse)").matches;
+
+// Celular: 2 jogadores fica so para tablet e computador (no celular fica apertado e pesado).
+const phoneQuery = window.matchMedia("(pointer: coarse) and (max-width: 600px)");
+function applyPhoneLayout() {
+  document.body.classList.toggle("is-phone", phoneQuery.matches);
+  if (phoneQuery.matches && mode === "duo") setMode("single");
+}
+phoneQuery.addEventListener?.("change", applyPhoneLayout);
+
+// Instalar como app: Android mostra o pedido do sistema; iPhone so permite pelo menu Compartilhar.
+const installBtn = qs<HTMLButtonElement>("#install-btn");
+type InstallPrompt = Event & { prompt: () => Promise<void> };
+let installPrompt: InstallPrompt | null = null;
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  installPrompt = e as InstallPrompt;
+  installBtn.classList.remove("is-hidden");
+});
+window.addEventListener("appinstalled", () => installBtn.classList.add("is-hidden"));
+if (isIOS && !standalone) installBtn.classList.remove("is-hidden");
+installBtn.addEventListener("click", async () => {
+  if (installPrompt) {
+    await installPrompt.prompt();
+    installPrompt = null;
+    installBtn.classList.add("is-hidden");
+  } else {
+    showToast('No iPhone: toque em Compartilhar e depois em "Adicionar à Tela de Início".', 6000);
+  }
+});
+
+// Tela cheia ao jogar (Android; o iPhone nao permite em pagina comum) e tela sempre acesa.
+function enterFullscreen() {
+  if (!touchDevice || standalone || document.fullscreenElement || !document.fullscreenEnabled) return;
+  document.documentElement
+    .requestFullscreen({ navigationUI: "hide" })
+    .then(() => (screen.orientation as unknown as { lock?: (o: string) => Promise<void> }).lock?.("portrait"))
+    .catch(() => {
+      /* sem tela cheia: segue normal */
+    });
+}
+
+type WakeLock = { release: () => Promise<void> };
+let wakeLock: WakeLock | null = null;
+function keepScreenOn(on: boolean) {
+  const api = (navigator as unknown as { wakeLock?: { request: (t: string) => Promise<WakeLock> } }).wakeLock;
+  if (on && !wakeLock && api) {
+    api.request("screen").then((l) => (wakeLock = l)).catch(() => undefined);
+  } else if (!on && wakeLock) {
+    void wakeLock.release().catch(() => undefined);
+    wakeLock = null;
+  }
+}
+document.addEventListener("visibilitychange", () => {
+  // o sistema solta a trava ao sair do app; pede de novo ao voltar para a partida
+  if (document.visibilityState === "visible" && inGame) {
+    wakeLock = null;
+    keepScreenOn(true);
+  }
+});
+
 // ---- Controles de toque (1 jogador) ----
 touchControls.querySelectorAll<HTMLButtonElement>("button").forEach((btn) => {
   const fire = (ev: Event) => {
@@ -145,6 +211,8 @@ function startGame() {
   touchControls.classList.toggle("is-hidden", cfg.mode === "duo");
   pauseBtn.classList.remove("is-hidden");
   inGame = true;
+  enterFullscreen();
+  keepScreenOn(true);
   void enginePromise.then((engine) => engine.start(cfg));
 }
 
@@ -340,6 +408,7 @@ rankForm.addEventListener("submit", async (ev) => {
 
 // ---- Voltar ao inicio ----
 function goHome() {
+  keepScreenOn(false);
   gameoverScreen.classList.add("is-hidden");
   touchControls.classList.add("is-hidden");
   pauseBtn.classList.add("is-hidden");
@@ -366,9 +435,11 @@ function pauseGame() {
   if (!inGame || !pauseScreen.classList.contains("is-hidden")) return;
   void enginePromise.then((engine) => engine.pause?.());
   showPauseScreen();
+  keepScreenOn(false);
 }
 
 function resumeGame() {
+  keepScreenOn(true);
   pauseScreen.classList.add("is-hidden");
   pauseBtn.classList.remove("is-hidden");
   touchControls.classList.toggle("is-hidden", lastConfig?.mode === "duo");
@@ -397,6 +468,7 @@ window.addEventListener("keydown", (e) => {
 });
 bus.on("gameover", () => {
   inGame = false;
+  keepScreenOn(false);
 });
 
 // ---- Compartilhar ----
@@ -418,11 +490,11 @@ qs<HTMLButtonElement>("#share-btn").addEventListener("click", async () => {
 
 // ---- Toast ----
 let toastTimer: number | undefined;
-function showToast(msg: string) {
+function showToast(msg: string, ms = 2600) {
   toastEl.textContent = msg;
   toastEl.classList.remove("is-hidden");
   window.clearTimeout(toastTimer);
-  toastTimer = window.setTimeout(() => toastEl.classList.add("is-hidden"), 2600);
+  toastTimer = window.setTimeout(() => toastEl.classList.add("is-hidden"), ms);
 }
 
 // ---- Cache offline (so no build de producao) ----
@@ -448,6 +520,7 @@ if (import.meta.env.PROD && "serviceWorker" in navigator) {
 
 // ---- Inicializacao ----
 setMode("single");
+applyPhoneLayout();
 renderChars();
 // pontuacoes que ficaram guardadas por falta de rede sobem agora ou quando a rede voltar
 void flushPending();
